@@ -1,0 +1,52 @@
+[project]
+name = "rambler"
+version = "0.1.0"
+description = "Agentic assistant for planning countryside walking day trips from London by train"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Geoff Chambers" }]
+requires-python = ">=3.12"
+# Pinning policy (plan.md D14): libraries still on 0.x are constrained to the
+# *current minor* (e.g. `deepagents>=0.6,<0.7`) because for 0.x releases it is
+# the minor bump that breaks the API -- a `<1.0` bound would be worthless.
+# Libraries at >=1.0 get a lower bound only. `uv.lock` is committed; upgrades
+# are manual and tested, never automatic (no Dependabot/Renovate auto-merge).
+dependencies = [
+    "httpx>=0.28",
+    "hishel>=0.1,<0.2",
+    "pydantic>=2.11",
+    "pydantic-settings>=2.10",
+    "python-dotenv>=1.1",
+    "pyyaml>=6.0",
+    "typer>=0.16",
+]
+
+[project.scripts]
+rambler = "rambler.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "pytest-cov>=6.2",
+    "ruff>=0.12",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.11"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not golden and not evals' --strict-markers"
+markers = [
+    "unit: default tier; offline, fixtures only (runs in CI)",
+    "golden: needs the local walks.db (not run in CI)",
+    "evals: spends model tokens; run manually",
+]
