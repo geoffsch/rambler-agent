@@ -19,6 +19,10 @@ walk:
   max_travel_minutes: 90
   min_distance_km: 5
 
+pace:
+  pace_factor: 1.4        # multiplier on Naismith's rule (1.0 = fit adult)
+  lunch_stop_minutes: 60
+
 lunch:
   preferred: [pub, cafe]
   position_along_route: [0.55, 0.80]
