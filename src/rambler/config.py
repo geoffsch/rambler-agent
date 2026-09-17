@@ -84,6 +84,14 @@ class LunchPreferences(BaseModel):
     notes: list[str] = Field(default_factory=list)
 
 
+class PaceProfile(BaseModel):
+    """Inputs to duration estimates (see ``rambler.geo.timing``)."""
+
+    pace_factor: float = Field(default=1.4, gt=0)
+    """Multiplier on Naismith's rule; 1.0 is a fit adult, ~1.4 a family with young kids."""
+    lunch_stop_minutes: int = Field(default=60, ge=0)
+
+
 class UserProfile(BaseModel):
     """The household the trips are planned for. Loaded from YAML."""
 
@@ -91,6 +99,7 @@ class UserProfile(BaseModel):
     transport_notes: list[str] = Field(default_factory=list)
     """Free-text preferences the agent should respect (preferred operators, termini)."""
     walk: WalkConstraints = Field(default_factory=WalkConstraints)
+    pace: PaceProfile = Field(default_factory=PaceProfile)
     lunch: LunchPreferences = Field(default_factory=LunchPreferences)
     kids_ages: list[int] = Field(default_factory=list)
 

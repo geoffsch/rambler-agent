@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="rambler-agent fixtures" xmlns="http://www.topografix.com/GPX/1/1">
+<trk><name>straight_1km</name><trkseg>
+<trkpt lat="51.3218834" lon="0.0077441"></trkpt>
+<trkpt lat="51.3218588" lon="0.0091783"></trkpt>
+<trkpt lat="51.3218342" lon="0.0106124"></trkpt>
+<trkpt lat="51.3218095" lon="0.0120466"></trkpt>
+<trkpt lat="51.3217849" lon="0.0134807"></trkpt>
+<trkpt lat="51.3217602" lon="0.0149148"></trkpt>
+<trkpt lat="51.3217355" lon="0.0163490"></trkpt>
+<trkpt lat="51.3217108" lon="0.0177831"></trkpt>
+<trkpt lat="51.3216861" lon="0.0192172"></trkpt>
+<trkpt lat="51.3216614" lon="0.0206514"></trkpt>
+<trkpt lat="51.3216366" lon="0.0220855"></trkpt>
+</trkseg></trk>
+</gpx>
