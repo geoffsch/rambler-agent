@@ -59,15 +59,32 @@ class Settings(BaseSettings):
     def http_cache_dir(self) -> Path:
         return self.data_dir / "cache" / "http"
 
+    @property
+    def db_path(self) -> Path:
+        return self.data_dir / "walks.db"
+
+    @property
+    def gpx_dir(self) -> Path:
+        return self.data_dir / "gpx"
+
 
 class Station(BaseModel):
     name: str
     crs: Annotated[str, Field(min_length=3, max_length=3, description="National Rail CRS code")]
+    termini: list[str] = Field(
+        default_factory=list,
+        description="London termini (CRS) conveniently reached from this station",
+    )
 
     @field_validator("crs")
     @classmethod
     def _upper(cls, v: str) -> str:
         return v.upper()
+
+    @field_validator("termini")
+    @classmethod
+    def _upper_all(cls, v: list[str]) -> list[str]:
+        return [t.upper() for t in v]
 
 
 class WalkConstraints(BaseModel):
@@ -102,6 +119,19 @@ class UserProfile(BaseModel):
     pace: PaceProfile = Field(default_factory=PaceProfile)
     lunch: LunchPreferences = Field(default_factory=LunchPreferences)
     kids_ages: list[int] = Field(default_factory=list)
+
+    def station(self, crs: str) -> Station | None:
+        crs = crs.upper()
+        return next((s for s in self.home_stations if s.crs == crs), None)
+
+    def termini_for(self, crs: str | None = None) -> list[str]:
+        """Termini reachable from one home station, or from any of them when ``crs`` is None."""
+        stations = [self.station(crs)] if crs else self.home_stations
+        seen: dict[str, None] = {}
+        for s in stations:
+            if s:
+                seen.update(dict.fromkeys(s.termini))
+        return list(seen)
 
     @classmethod
     def load(cls, path: Path | str = DEFAULT_PROFILE_PATH) -> UserProfile:

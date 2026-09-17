@@ -3,9 +3,10 @@
 An agentic assistant for planning countryside walks (rambles, in British English)
 in the UK, typically as day trips from London by public transport.
 
-**Status: scaffolding.** Project skeleton, configuration and the shared HTTP
-layer exist; no walk data, connectors or agent yet. This README describes the
-intended system.
+**Status: grounded walk database.** The Saturday Walkers Club catalogue can be
+ingested into a local SQLite database with computed geometry, and queried from
+the command line. No transport, places, weather or agent yet. This README
+describes the intended system.
 
 ## What it does (planned)
 
@@ -47,7 +48,23 @@ uv run rambler profile show
 
 Set `RAMBLER_CONTACT` in `.env` to your e-mail before running anything that
 fetches from third-party sites: it goes into the HTTP `User-Agent` so site
-operators can reach you.
+operators can reach you. Ingestion refuses to run without it.
+
+### Build and query the walk database
+
+```
+uv run rambler ingest swc            # ~540 walks; polite (1 req/s), cache-first, ~20 min first time
+uv run rambler walks stats           # coverage report and distance histogram
+uv run rambler walks find --max-km 13 --from HNH
+uv run rambler walks find --max-km 13 --max-travel-min 60 --region Kent --with-options
+uv run rambler walks find --text "bluebells pub"
+uv run pytest -m golden              # grounding checks against the ingested DB
+```
+
+`--from` uses the `termini` listed for that home station in your profile to
+match walks by their London departure station. Journey minutes shown are the
+source's approximate terminus-to-start times, never bookable. Everything the
+`walks` commands do is a plain database query: no model, no network.
 
 ## Tech stack
 

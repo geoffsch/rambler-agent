@@ -1,10 +1,14 @@
 # Personal profile for Rambler. Copy to user_profile.yaml (git-ignored) and edit.
 # Nothing in the code assumes these values (plan.md principle 4).
 
+# termini: the London termini you can conveniently reach from each home station.
+# Used to match walks by their London departure station until real journey
+# planning arrives (Phase 2). BFR = Blackfriars, STP = St Pancras (Thameslink),
+# VIC = Victoria, LBG = London Bridge.
 home_stations:
-  - { name: Herne Hill, crs: HNH }
-  - { name: Tulse Hill, crs: TUH }
-  - { name: Brixton, crs: BRX }
+  - { name: Herne Hill, crs: HNH, termini: [VIC, BFR, STP] }
+  - { name: Tulse Hill, crs: TUH, termini: [LBG, BFR, STP] }
+  - { name: Brixton, crs: BRX, termini: [VIC] }
 
 transport_notes:
   - Prefer Thameslink (Blackfriars / London Bridge) and Southeastern from Herne Hill.

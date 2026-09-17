@@ -24,6 +24,6 @@ def test_cli_version_and_profile_show(example_profile_path) -> None:
     assert result.exit_code == 0, result.output
     assert rambler.__version__ in result.output
 
-    result = runner.invoke(app, ["profile", "show", "--path", str(example_profile_path)])
+    result = runner.invoke(app, ["profile", "show", "-p", str(example_profile_path)])
     assert result.exit_code == 0, result.output
     assert "Herne Hill" in result.output
