@@ -1,0 +1,32 @@
+# Internal planning docs and local author context (see CLAUDE.md)
+planning/
+AUTHOR.local.md
+
+# Secrets and personal configuration
+.env
+user_profile.yaml
+
+# Ingested / generated data (third-party content: never commit)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# LangGraph local server state
+.langgraph_api/
+
+# Node / frontend (Phase 4)
+node_modules/
+frontend/.next/
+frontend/out/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
