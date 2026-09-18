@@ -14,8 +14,11 @@ def test_package_imports() -> None:
 
 def test_example_profile_loads(example_profile_path) -> None:
     profile = UserProfile.load(example_profile_path)
-    assert [s.crs for s in profile.home_stations] == ["HNH", "TUH", "BRX"]
+    assert [s.crs for s in profile.home_stations] == ["HNH", "BRX"]
     assert profile.walk.max_distance_km == 13
+    assert profile.station("HNH").access_minutes("VIC") == 12
+    assert profile.station("HNH").prefers("CHX"), "a null time still means preferred"
+    assert profile.station("HNH").access_minutes("CHX") is None
 
 
 def test_cli_version_and_profile_show(example_profile_path) -> None:
