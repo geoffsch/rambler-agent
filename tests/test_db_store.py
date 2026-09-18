@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from rambler.db.store import WalkStore
+from rambler.db.store import WalkStore, _declared_columns
 from rambler.models import FoodStop, Provenance, Variation, VariationKind, Walk
 
 pytestmark = pytest.mark.unit
@@ -118,3 +118,24 @@ def test_store_on_disk(tmp_path: Path) -> None:
         s.upsert(make_walk("a"))
     with WalkStore(path) as s:
         assert s.count() == 1
+
+
+def test_older_database_gains_new_columns(tmp_path: Path) -> None:
+    """CREATE TABLE IF NOT EXISTS leaves an old table alone, so inserts would fail silently."""
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    con = sqlite3.connect(path)
+    con.executescript(
+        "CREATE TABLE walks (id INTEGER PRIMARY KEY, source TEXT NOT NULL,"
+        " source_id TEXT NOT NULL, slug TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL,"
+        " UNIQUE (source, slug));"
+    )
+    con.commit()
+    con.close()
+
+    with WalkStore(path) as s:
+        cols = {r["name"] for r in s.conn.execute("PRAGMA table_info(walks)")}
+        assert set(_declared_columns("walks")) <= cols, "every declared column is added"
+        s.upsert(make_walk("a", published_distance_km=9.0))
+        assert s.get_walk("a").published_distance_km == 9.0

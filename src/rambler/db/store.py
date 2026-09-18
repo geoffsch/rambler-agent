@@ -12,6 +12,7 @@ filters on the source-seeded, approximate journey time (D10).
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from collections.abc import Iterable, Sequence
 from datetime import datetime
@@ -45,6 +46,10 @@ CREATE TABLE IF NOT EXISTS walks (
     gpx_url TEXT,
     gpx_path TEXT,
     gpx_route_count INTEGER,
+    start_lat REAL,
+    start_lon REAL,
+    finish_lat REAL,
+    finish_lon REAL,
     computed_distance_km REAL,
     computed_ascent_m REAL,
     has_elevation INTEGER,
@@ -88,7 +93,7 @@ _WALK_COLUMNS = (
     "start_station", "start_crs", "finish_station", "finish_crs", "london_departure_crs_json",
     "seeded_journey_minutes", "seeded_journey_source", "gpx_url", "gpx_path", "gpx_route_count",
     "computed_distance_km", "computed_ascent_m", "has_elevation", "food_notes", "directions",
-    "fetched_at",
+    "start_lat", "start_lon", "finish_lat", "finish_lon", "fetched_at",
 )  # fmt: skip
 
 
@@ -116,6 +121,10 @@ def _walk_row(walk: Walk) -> dict[str, Any]:
         "gpx_url": walk.gpx_url,
         "gpx_path": str(walk.gpx_path) if walk.gpx_path else None,
         "gpx_route_count": walk.gpx_route_count,
+        "start_lat": walk.start_lat,
+        "start_lon": walk.start_lon,
+        "finish_lat": walk.finish_lat,
+        "finish_lon": walk.finish_lon,
         "computed_distance_km": walk.computed_distance_km,
         "computed_ascent_m": walk.computed_ascent_m,
         "has_elevation": None if walk.has_elevation is None else int(walk.has_elevation),
@@ -136,6 +145,21 @@ class WalkStore:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.executescript(SCHEMA)
+        self._add_missing_columns("walks")
+
+    def _add_missing_columns(self, table: str) -> None:
+        """Add any column in :data:`SCHEMA` that an older database file lacks.
+
+        ``CREATE TABLE IF NOT EXISTS`` leaves an existing table untouched, so without this
+        a new optional field turns every insert into a silent failure. Additive only: a
+        renamed or retyped column still needs a rebuild, which is cheap because ingestion
+        is idempotent over the HTTP cache.
+        """
+        existing = {r["name"] for r in self.conn.execute(f"PRAGMA table_info({table})")}
+        for name, decl in _declared_columns(table).items():
+            if name not in existing:
+                self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+        self.conn.commit()
 
     def __enter__(self) -> WalkStore:
         return self
@@ -254,6 +278,10 @@ class WalkStore:
             gpx_url=d["gpx_url"],
             gpx_path=Path(d["gpx_path"]) if d["gpx_path"] else None,
             gpx_route_count=d["gpx_route_count"],
+            start_lat=d["start_lat"],
+            start_lon=d["start_lon"],
+            finish_lat=d["finish_lat"],
+            finish_lon=d["finish_lon"],
             computed_distance_km=d["computed_distance_km"],
             computed_ascent_m=d["computed_ascent_m"],
             has_elevation=None if d["has_elevation"] is None else bool(d["has_elevation"]),
@@ -377,6 +405,7 @@ class WalkStore:
                 "SELECT COUNT(*) FROM walks WHERE seeded_journey_minutes IS NOT NULL"
             ),
             "with_start_crs": one("SELECT COUNT(*) FROM walks WHERE start_crs IS NOT NULL"),
+            "with_start_point": one("SELECT COUNT(*) FROM walks WHERE start_lat IS NOT NULL"),
             "with_variations": one("SELECT COUNT(DISTINCT walk_id) FROM variations"),
             "with_variation_distance": one(
                 "SELECT COUNT(DISTINCT walk_id) FROM variations WHERE distance_km IS NOT NULL"
@@ -389,6 +418,21 @@ class WalkStore:
             "distance_mismatch_over_10pct": [tuple(r) for r in mismatch],
             "distance_histogram_2km": [(int(b), int(n)) for b, n in hist],
         }
+
+
+def _declared_columns(table: str) -> dict[str, str]:
+    """``{column: sql_type}`` parsed out of :data:`SCHEMA`, so migration cannot drift."""
+    body = re.search(rf"CREATE TABLE IF NOT EXISTS {table} \((.*?)\);", SCHEMA, re.S)
+    if body is None:  # pragma: no cover - only reachable if SCHEMA is edited badly
+        raise ValueError(f"no CREATE TABLE for {table} in SCHEMA")
+    columns: dict[str, str] = {}
+    for raw in body.group(1).splitlines():
+        line = raw.strip().rstrip(",")
+        if not line or line.upper().startswith(("UNIQUE", "PRIMARY", "FOREIGN", "CHECK")):
+            continue
+        name, _, decl = line.partition(" ")
+        columns[name] = decl
+    return columns
 
 
 def _fts_query(text: str) -> str:

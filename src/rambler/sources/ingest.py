@@ -105,6 +105,10 @@ def _attach_geometry(
     tracks = parse_gpx_all(gpx_text, source_path=path)
     main = tracks[0]
     walk.gpx_route_count = len(tracks)
+    # Store the end points in plain lon/lat before any projection, so they survive even
+    # for walks outside Great Britain (plans 03-05 need them for stations, POIs and maps).
+    walk.start_lat, walk.start_lon = main.points[0].lat, main.points[0].lon
+    walk.finish_lat, walk.finish_lon = main.points[-1].lat, main.points[-1].lon
     if backfill and not main.has_elevation:
         main = backfill_elevation(main, client)
         report.elevation_backfilled.append(walk.slug)

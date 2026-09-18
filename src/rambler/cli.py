@@ -97,6 +97,9 @@ def ingest_swc(
             ),
         )
     typer.echo(report.summary())
+    if report.total and not report.ingested:
+        typer.secho("nothing was ingested - see the errors above", err=True, fg=typer.colors.RED)
+        raise typer.Exit(1)
     if report.distance_mismatch:
         typer.echo("distance outliers (slug, published, computed):")
         for slug, pub, comp in sorted(
@@ -125,8 +128,8 @@ def walks_stats() -> None:
     typer.echo(f"walks: {total}  by source: {s['by_source']}")
     for key in (
         "with_gpx", "with_computed_distance", "with_elevation", "with_seeded_journey",
-        "with_start_crs", "with_variations", "with_variation_distance", "with_food_stops",
-        "with_food_phone", "with_directions",
+        "with_start_crs", "with_start_point", "with_variations", "with_variation_distance",
+        "with_food_stops", "with_food_phone", "with_directions",
     ):  # fmt: skip
         typer.echo(f"  {key:<26} {pct(s[key])}")
     typer.echo("\ndistance histogram (km, 2 km buckets, computed where available):")

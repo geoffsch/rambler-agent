@@ -107,6 +107,10 @@ class Walk(BaseModel):
     gpx_url: str | None = None
     gpx_path: Path | None = None
     gpx_route_count: int | None = None
+    start_lat: float | None = None
+    start_lon: float | None = None
+    finish_lat: float | None = None
+    finish_lon: float | None = None
     computed_distance_km: float | None = Field(default=None, gt=0)
     computed_ascent_m: float | None = Field(default=None, ge=0)
     has_elevation: bool | None = None
