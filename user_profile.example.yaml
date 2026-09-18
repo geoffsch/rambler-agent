@@ -1,18 +1,39 @@
-# Personal profile for Rambler. Copy to user_profile.yaml (git-ignored) and edit.
+# Example profile. Copy to user_profile.yaml (git-ignored) and make it yours.
 # Nothing in the code assumes these values (plan.md principle 4).
+#
+# The household sketched here is a south London family doing shorter walks.
+# Edit every part of it: stations, distances, pace, preferences.
 
+# termini: London terminus -> roughly how many minutes it takes you to reach it
+# from that home station. This is a PREFERENCE WITH A COST, not a permission list:
+# walks leaving from a terminus you have not listed are still found, just flagged
+# and ranked last. Use `null` for "I would use it but do not know the time".
+#
+# The estimate shown by `rambler walks find --from HNH` is this number plus the
+# source's own approximate terminus-to-start time. Real journey planning (changes,
+# actual departures) arrives in Phase 2; nothing here is bookable.
+#
+# Terminus codes that appear on Saturday Walkers Club walks, commonest first:
+# CLJ Clapham Junction, VIC Victoria, WAT Waterloo, STP St Pancras,
+# ECR East Croydon, LBG London Bridge, CHX Charing Cross, BFR Blackfriars,
+# PAD Paddington, LST Liverpool Street, EUS Euston, KGX King's Cross,
+# MYB Marylebone, SRA Stratford, FST Fenchurch Street, MOG Moorgate,
+# CST Cannon Street.
+#
+# THE NUMBERS BELOW ARE PLACEHOLDERS - replace them with your own timings.
 home_stations:
-  - { name: Herne Hill, crs: HNH }
-  - { name: Tulse Hill, crs: TUH }
-  - { name: Brixton, crs: BRX }
+  - name: Herne Hill
+    crs: HNH
+    termini: { VIC: 12, BFR: 15, STP: 22, CHX: null }
+  - name: Brixton
+    crs: BRX
+    termini: { VIC: 10 }
 
 transport_notes:
-  - Prefer Thameslink (Blackfriars / London Bridge) and Southeastern from Herne Hill.
-  - Southeastern via a change at Bromley South is a good direct-ish route out.
-  - Southern via Tulse Hill is fine.
-  - South Western from Vauxhall (tube from Brixton) is a last resort.
-  - Victoria and Blackfriars/London Bridge termini are easy; King's Cross and
-    Liverpool Street cost an extra 30-40 minutes across town.
+  - Thameslink and Southeastern are the easy lines out of south London.
+  - Anything needing a cross-town trek to King's Cross or Liverpool Street
+    costs an extra half hour each way.
+  - Prefer one change or none.
 
 walk:
   max_distance_km: 13
@@ -27,7 +48,6 @@ lunch:
   preferred: [pub, cafe]
   position_along_route: [0.55, 0.80]
   notes:
-    - Garden and kid-friendly menu are a bonus.
-    - Picnic plus a drink stop is a fine alternative.
+    - A garden and a kid-friendly menu are a bonus.
 
-kids_ages: [4, 7]
+kids_ages: [6]

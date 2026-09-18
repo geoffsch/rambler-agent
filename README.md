@@ -3,9 +3,10 @@
 An agentic assistant for planning countryside walks (rambles, in British English)
 in the UK, typically as day trips from London by public transport.
 
-**Status: scaffolding.** Project skeleton, configuration and the shared HTTP
-layer exist; no walk data, connectors or agent yet. This README describes the
-intended system.
+**Status: grounded walk database.** The Saturday Walkers Club catalogue can be
+ingested into a local SQLite database with computed geometry, and queried from
+the command line. No transport, places, weather or agent yet. This README
+describes the intended system.
 
 ## What it does (planned)
 
@@ -47,7 +48,30 @@ uv run rambler profile show
 
 Set `RAMBLER_CONTACT` in `.env` to your e-mail before running anything that
 fetches from third-party sites: it goes into the HTTP `User-Agent` so site
-operators can reach you.
+operators can reach you. Ingestion refuses to run without it.
+
+### Build and query the walk database
+
+```
+uv run rambler ingest swc            # ~540 walks; polite (1 req/s), cache-first, ~20 min first time
+uv run rambler walks stats           # coverage report and distance histogram
+uv run rambler walks find --max-km 13 --from HNH
+uv run rambler walks find --max-km 13 --from HNH --max-travel-min 75 --with-options
+uv run rambler walks find --text "bluebells pub" --region Kent
+uv run pytest -m golden              # grounding checks against the ingested DB
+```
+
+`--from` names a home station in your profile. The `termini` you list under it
+are a preference with a cost, not a permission list: each entry says roughly how
+long it takes you to reach that London terminus, and the `mins` column adds that
+to the approximate terminus-to-start time the walk source publishes. Walks
+leaving from a terminus you have not listed are still shown, marked `~` and
+ranked last; `--only-preferred` hides them. Where no time can be worked out at
+all, the crow-flies distance from London is shown instead of a guess.
+
+Nothing here is bookable: real journey planning, with changes and actual
+departures, arrives in Phase 2. Everything the `walks` commands do today is a
+plain database query, with no model and no network.
 
 ## Tech stack
 

@@ -1,0 +1,51 @@
+# Golden walks (plan 07): walks Geoff knows, with facts the pipeline must reproduce.
+# Checks run against the locally ingested data/walks.db and skip when it is absent.
+#
+# STATUS: Otford Circular is confirmed. The others are PROVISIONAL picks from the
+# Phase 0.5 shortlist and need Geoff's confirmation or replacement.
+#
+# Fields: published_km / computed_km tolerance is relative; london_crs_any lists
+# termini of which at least one must appear; variations_min is a lower bound on
+# parsed variations; food_stop_names must each match a parsed food stop (substring);
+# journey_minutes_band is the plausible band for the SWC-seeded time (null = unknown).
+
+walks:
+  - slug: otford-circular
+    source: swc
+    published_km: 12.4
+    computed_km_tolerance: 0.05
+    london_crs_any: [VIC, BFR, STP]
+    start_crs: OTF
+    variations_min: 3
+    food_stop_names: ["Rising Sun", "King's Arms"]
+    food_stop_with_phone: true
+    journey_minutes_band: [25, 50]
+    confirmed: true
+
+  - slug: otford-to-eynsford
+    source: swc
+    published_km: 14.1
+    computed_km_tolerance: 0.10
+    london_crs_any: [VIC, BFR, STP]
+    variations_min: 1
+    journey_minutes_band: [25, 50]
+    confirmed: false
+
+  - slug: wadhurst-to-tunbridge-wells
+    source: swc
+    published_km: 13.3
+    computed_km_tolerance: 0.10
+    london_crs_any: [LBG, CHX]
+    variations_min: 2
+    food_stop_names: ["George Inn"]
+    food_stop_with_phone: true
+    journey_minutes_band: null   # newer-generation page: no journey time quoted
+    confirmed: false
+
+  - slug: shoreham-circular
+    source: swc
+    published_km: 20.0
+    computed_km_tolerance: 0.10
+    london_crs_any: [VIC, BFR, STP]
+    variations_min: 1
+    confirmed: false

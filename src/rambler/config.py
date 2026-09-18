@@ -59,15 +59,50 @@ class Settings(BaseSettings):
     def http_cache_dir(self) -> Path:
         return self.data_dir / "cache" / "http"
 
+    @property
+    def db_path(self) -> Path:
+        return self.data_dir / "walks.db"
+
+    @property
+    def gpx_dir(self) -> Path:
+        return self.data_dir / "gpx"
+
 
 class Station(BaseModel):
+    """A home station, and roughly how long it takes to reach each London terminus.
+
+    ``termini`` is a *preference with a cost*, never a permission list: walks leaving
+    from an unlisted terminus are still found, just flagged and ranked last. A value of
+    ``null`` means "I would use this terminus but do not know the time".
+    """
+
     name: str
     crs: Annotated[str, Field(min_length=3, max_length=3, description="National Rail CRS code")]
+    termini: dict[str, int | None] = Field(
+        default_factory=dict,
+        description="London terminus CRS -> approximate minutes from this station",
+    )
 
     @field_validator("crs")
     @classmethod
     def _upper(cls, v: str) -> str:
         return v.upper()
+
+    @field_validator("termini", mode="before")
+    @classmethod
+    def _normalise_termini(cls, v: object) -> object:
+        """Accept a bare list (``[VIC, BFR]``) as well as a mapping, and upper-case keys."""
+        if isinstance(v, list):
+            return {str(t).upper(): None for t in v}
+        if isinstance(v, dict):
+            return {str(k).upper(): val for k, val in v.items()}
+        return v
+
+    def access_minutes(self, terminus_crs: str) -> int | None:
+        return self.termini.get(terminus_crs.upper())
+
+    def prefers(self, terminus_crs: str) -> bool:
+        return terminus_crs.upper() in self.termini
 
 
 class WalkConstraints(BaseModel):
@@ -102,6 +137,19 @@ class UserProfile(BaseModel):
     pace: PaceProfile = Field(default_factory=PaceProfile)
     lunch: LunchPreferences = Field(default_factory=LunchPreferences)
     kids_ages: list[int] = Field(default_factory=list)
+
+    def station(self, crs: str) -> Station | None:
+        crs = crs.upper()
+        return next((s for s in self.home_stations if s.crs == crs), None)
+
+    def termini_for(self, crs: str | None = None) -> list[str]:
+        """Preferred termini for one home station, or across all of them when ``crs`` is None."""
+        stations = [self.station(crs)] if crs else self.home_stations
+        seen: dict[str, None] = {}
+        for s in stations:
+            if s:
+                seen.update(dict.fromkeys(s.termini))
+        return list(seen)
 
     @classmethod
     def load(cls, path: Path | str = DEFAULT_PROFILE_PATH) -> UserProfile:
