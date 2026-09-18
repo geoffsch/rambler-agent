@@ -1,8 +1,11 @@
+import re
 from pathlib import Path
 
 import pytest
+from rich.console import Console
 from typer.testing import CliRunner
 
+from rambler import cli
 from rambler.cli import app
 from rambler.db.store import WalkStore
 from rambler.sources.ingest import ingest
@@ -20,7 +23,8 @@ home_stations:
 @pytest.fixture
 def db(fixtures_dir: Path, tmp_path: Path, monkeypatch) -> Path:
     monkeypatch.setenv("RAMBLER_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("COLUMNS", "250")  # stop rich wrapping the table
+    monkeypatch.setenv("COLUMNS", "250")
+    monkeypatch.setattr(cli, "console", Console(width=250))  # never wrap the table
     monkeypatch.delenv("RAMBLER_PROFILE_PATH", raising=False)
     with WalkStore(tmp_path / "walks.db") as store:
         ingest(FixtureSource(fixtures_dir / "swc"), store, gpx_dir=tmp_path / "gpx", backfill=False)
@@ -39,6 +43,21 @@ def profile(tmp_path: Path) -> Path:
     path = tmp_path / "profile.yaml"
     path.write_text(PROFILE, encoding="utf-8")
     return path
+
+
+_ANSI = re.compile("" + r"\[[0-9;]*m")
+
+
+def clean(output: str) -> str:
+    """Strip colour codes and box drawing, and collapse whitespace.
+
+    Rich wraps error text inside a bordered panel whose width depends on the
+    terminal, so a phrase can be split across lines. CI is narrower than a
+    developer machine; normalising here keeps the assertions about content.
+    """
+    text = _ANSI.sub("", output)
+    text = re.sub(r"[│┃|]", " ", text)
+    return " ".join(text.split())
 
 
 def run(*args: str) -> str:
@@ -78,10 +97,10 @@ def test_without_from_the_seeded_filter_is_strict(db: Path) -> None:
 def test_errors(db: Path, profile: Path) -> None:
     runner = CliRunner()
     r = runner.invoke(app, ["walks", "find", "--from", "ZZZ", "-p", str(profile)])
-    assert r.exit_code != 0 and "not a home station" in r.output
+    assert r.exit_code != 0 and "not a home station" in clean(r.output)
 
     r = runner.invoke(app, ["walks", "find", "--only-preferred", "-p", str(profile)])
-    assert r.exit_code != 0 and "needs --from" in r.output
+    assert r.exit_code != 0 and "needs --from" in clean(r.output)
 
     # a home station with no termini listed is usable: everything is simply unlisted
     r = runner.invoke(app, ["walks", "find", "--from", "NWH", "-p", str(profile)])
