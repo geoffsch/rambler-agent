@@ -69,11 +69,18 @@ class Settings(BaseSettings):
 
 
 class Station(BaseModel):
+    """A home station, and roughly how long it takes to reach each London terminus.
+
+    ``termini`` is a *preference with a cost*, never a permission list: walks leaving
+    from an unlisted terminus are still found, just flagged and ranked last. A value of
+    ``null`` means "I would use this terminus but do not know the time".
+    """
+
     name: str
     crs: Annotated[str, Field(min_length=3, max_length=3, description="National Rail CRS code")]
-    termini: list[str] = Field(
-        default_factory=list,
-        description="London termini (CRS) conveniently reached from this station",
+    termini: dict[str, int | None] = Field(
+        default_factory=dict,
+        description="London terminus CRS -> approximate minutes from this station",
     )
 
     @field_validator("crs")
@@ -81,10 +88,21 @@ class Station(BaseModel):
     def _upper(cls, v: str) -> str:
         return v.upper()
 
-    @field_validator("termini")
+    @field_validator("termini", mode="before")
     @classmethod
-    def _upper_all(cls, v: list[str]) -> list[str]:
-        return [t.upper() for t in v]
+    def _normalise_termini(cls, v: object) -> object:
+        """Accept a bare list (``[VIC, BFR]``) as well as a mapping, and upper-case keys."""
+        if isinstance(v, list):
+            return {str(t).upper(): None for t in v}
+        if isinstance(v, dict):
+            return {str(k).upper(): val for k, val in v.items()}
+        return v
+
+    def access_minutes(self, terminus_crs: str) -> int | None:
+        return self.termini.get(terminus_crs.upper())
+
+    def prefers(self, terminus_crs: str) -> bool:
+        return terminus_crs.upper() in self.termini
 
 
 class WalkConstraints(BaseModel):
@@ -125,7 +143,7 @@ class UserProfile(BaseModel):
         return next((s for s in self.home_stations if s.crs == crs), None)
 
     def termini_for(self, crs: str | None = None) -> list[str]:
-        """Termini reachable from one home station, or from any of them when ``crs`` is None."""
+        """Preferred termini for one home station, or across all of them when ``crs`` is None."""
         stations = [self.station(crs)] if crs else self.home_stations
         seen: dict[str, None] = {}
         for s in stations:

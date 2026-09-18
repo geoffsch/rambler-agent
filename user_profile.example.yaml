@@ -1,22 +1,43 @@
 # Personal profile for Rambler. Copy to user_profile.yaml (git-ignored) and edit.
 # Nothing in the code assumes these values (plan.md principle 4).
 
-# termini: the London termini you can conveniently reach from each home station.
-# Used to match walks by their London departure station until real journey
-# planning arrives (Phase 2). BFR = Blackfriars, STP = St Pancras (Thameslink),
-# VIC = Victoria, LBG = London Bridge.
+# termini: London terminus -> roughly how many minutes it takes you to get there
+# from that home station. This is a PREFERENCE WITH A COST, not a permission list:
+# walks leaving from a terminus you have not listed are still found, just flagged
+# and ranked last. Use `null` for "I would use it but do not know the time".
+#
+# The estimate shown by `rambler walks find --from HNH` is this number plus the
+# source's own approximate terminus-to-start time. Real journey planning (changes,
+# actual departures) arrives in Phase 2; nothing here is bookable.
+#
+# Terminus codes that appear on Saturday Walkers Club walks, with how many walks
+# list each: CLJ Clapham Junction 141, VIC Victoria 139, WAT Waterloo 110,
+# STP St Pancras 70, ECR East Croydon 70, LBG London Bridge 62, CHX Charing Cross 62,
+# BFR Blackfriars 60, PAD Paddington 52, LST Liverpool Street 31, EUS Euston 21,
+# KGX King's Cross 19, MYB Marylebone 19, SRA Stratford 16, FST Fenchurch Street 7,
+# MOG Moorgate 5, CST Cannon Street 5.
+#
+# THE NUMBERS BELOW ARE PLACEHOLDERS - correct them with your own timings.
 home_stations:
-  - { name: Herne Hill, crs: HNH, termini: [VIC, BFR, STP] }
-  - { name: Tulse Hill, crs: TUH, termini: [LBG, BFR, STP] }
-  - { name: Brixton, crs: BRX, termini: [VIC] }
+  - name: Herne Hill
+    crs: HNH
+    termini: { VIC: 12, BFR: 15, STP: 22, LBG: 25, CHX: 25, CLJ: 25, WAT: 30 }
+  - name: Tulse Hill
+    crs: TUH
+    termini: { LBG: 20, BFR: 20, STP: 27, ECR: 15, VIC: 25, CLJ: 25 }
+  - name: Brixton
+    crs: BRX
+    termini: { VIC: 10, WAT: 20, LBG: 25, CLJ: 25 }
 
 transport_notes:
   - Prefer Thameslink (Blackfriars / London Bridge) and Southeastern from Herne Hill.
   - Southeastern via a change at Bromley South is a good direct-ish route out.
-  - Southern via Tulse Hill is fine.
+  - Southern via Tulse Hill is fine, including direct trains to East Croydon.
   - South Western from Vauxhall (tube from Brixton) is a last resort.
   - Victoria and Blackfriars/London Bridge termini are easy; King's Cross and
     Liverpool Street cost an extra 30-40 minutes across town.
+  - What actually matters is door-to-door time and how awkward the changes are,
+    not which terminus it is; the numbers above are a stand-in until Phase 2.
 
 walk:
   max_distance_km: 13

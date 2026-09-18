@@ -56,15 +56,22 @@ operators can reach you. Ingestion refuses to run without it.
 uv run rambler ingest swc            # ~540 walks; polite (1 req/s), cache-first, ~20 min first time
 uv run rambler walks stats           # coverage report and distance histogram
 uv run rambler walks find --max-km 13 --from HNH
-uv run rambler walks find --max-km 13 --max-travel-min 60 --region Kent --with-options
-uv run rambler walks find --text "bluebells pub"
+uv run rambler walks find --max-km 13 --from HNH --max-travel-min 75 --with-options
+uv run rambler walks find --text "bluebells pub" --region Kent
 uv run pytest -m golden              # grounding checks against the ingested DB
 ```
 
-`--from` uses the `termini` listed for that home station in your profile to
-match walks by their London departure station. Journey minutes shown are the
-source's approximate terminus-to-start times, never bookable. Everything the
-`walks` commands do is a plain database query: no model, no network.
+`--from` names a home station in your profile. The `termini` you list under it
+are a preference with a cost, not a permission list: each entry says roughly how
+long it takes you to reach that London terminus, and the `mins` column adds that
+to the approximate terminus-to-start time the walk source publishes. Walks
+leaving from a terminus you have not listed are still shown, marked `~` and
+ranked last; `--only-preferred` hides them. Where no time can be worked out at
+all, the crow-flies distance from London is shown instead of a guess.
+
+Nothing here is bookable: real journey planning, with changes and actual
+departures, arrives in Phase 2. Everything the `walks` commands do today is a
+plain database query, with no model and no network.
 
 ## Tech stack
 
